@@ -1,0 +1,27 @@
+{
+  "experiment_id": "EXP-0001",
+  "candidate_score": 54.0,
+  "incumbent_score": 102.0,
+  "delta": -48.0,
+  "valid": true,
+  "promoted": true,
+  "reason": "improved",
+  "status": "succeeded",
+  "n_trials": null,
+  "mean_delta": null,
+  "noise_floor": null,
+  "significant": null,
+  "details": {
+    "mean_infidelity": 2.38073449843057e-13,
+    "ms_count": 54,
+    "eps": 0.0001,
+    "n_states": 48,
+    "dataset_source": "SEALED",
+    "reference": "ideal one-Trotter-step unitary U_ideal"
+  },
+  "gate_promoted": true,
+  "gate_decision": "promoted",
+  "host": "Gyalpos-Mac-mini.local",
+  "harness_commit": "18a6e7d",
+  "created": "2026-08-26T08:15:42Z"
+}

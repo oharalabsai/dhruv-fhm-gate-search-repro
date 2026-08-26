@@ -1,0 +1,34 @@
+{
+  "campaign_name": "dhruv-fhm-gate-search",
+  "objective": "Minimize the number of two-qubit (Molmer-Sorensen, MS) gates in an IonQ Aria native-gate circuit ({GPi, GPi2, virtual-RZ, MS}) that implements one first-order Trotter step of the N=6 Fermi-Hubbard model as a Z2 lattice gauge theory (arXiv:2411.07778; 18 qubits, 3/site; H = -4J sum tau^z S+S- + h.c. + (U/2) sum tau^x tau^x; J=1, U=2, dt=0.3), subject to a fidelity floor against the ideal Trotter-step unitary.",
+  "metric_definition": "Score = number of MS gates in the circuit IF the circuit uses only native gates {GPi(phi), GPi2(phi), RZ(theta), MS(phi0,phi1,theta)} AND its state-averaged mean infidelity vs U_ideal is <= 1e-4; otherwise the circuit is INVALID (score = 1e6, never promotes). LOWER is better. U_ideal is the exact ordered product of block exponentials for one Trotter step (Dhruv's uncompiled ideal circuit C-hat), applied by statevector simulation -- NOT exp(-i H dt), whose Trotter error would make a 1e-4 bar ill-posed. Mean infidelity = mean over a hidden battery of random input states (Haar / random-product / computational-basis) of 1 - |<U_ideal psi | U_candidate psi>|^2. Fidelity is certified against the IDEAL unitary, NEVER against a noise realization (the 2022 Google SYK over-pruning trap). The Hamiltonian, U_ideal, native gate set, and simulator are PUBLIC (workspace/target.py); the battery seeds are hidden (P13).",
+  "artifact_name": "candidate.py",
+  "artifact_kind": "file",
+  "editable_surface": ["workspace/candidate.py"],
+  "protected": ["workspace/target.py", "workspace/baseline.py", "workspace/incumbent.py", "contract.json", "scorekeeper_private/**"],
+  "promotion_bar": "Strictly fewer MS gates than the incumbent's fresh score, with a valid circuit (native AND infidelity <= 1e-4). Invalid circuits never promote regardless of MS count. (min_improvement=1.0; MS count is an integer.)",
+  "kill_criteria": [
+    "3 consecutive cycles with no promotion (no strictly-lower valid MS count) -> consolidate to the honest bound on Dhruv's hand-design",
+    "any integrity rejection twice in the same direction",
+    "anchor-fidelity kill: if the frozen baseline fails infidelity <= 1e-4 the referee itself is wrong -- fix the physics before trusting any win"
+  ],
+  "kill_after_no_promo": 3,
+  "ship_condition": "Reach <= 54 MS (9N, matching Dhruv's hand-designed 36% reduction) at infidelity <= 1e-4 (WIN); continue below 54 as a stretch until the search stalls. Honest-null: if the loop plateaus above 54, publish the bound on how good his hand-design was; do NOT assert his 36% was suboptimal unless a valid circuit with < 54 MS is certified.",
+  "ship_at_score": null,
+  "reduction": {
+    "source_type": "quantum circuit compilation (a human hand-designed a low-two-qubit-gate native circuit for one Trotter step)",
+    "target_type": "search",
+    "transform": "The hand-design choice -- which gates to reorder/compress and the compression schedule -- is recast as a search over native-gate circuits approximating the fixed ideal unitary U_ideal. What is preserved: the target unitary and the native gate set. What is lost: nothing about the physics; only the human's specific derivation is replaced by autonomous search + self-certification.",
+    "signal": "MS-gate count at fixed fidelity is a graded objective: every MS gate removed while the circuit stays <= 1e-4 infidelity is measurable progress, giving the loop a gradient from 102 (naive baseline) down toward 54 (Dhruv's 9N) and below.",
+    "completeness": "Solving the search (a low-MS native circuit at <= 1e-4 vs U_ideal) exactly demonstrates the compression claim on classical fidelity. Gap: this is one Trotter step scored on certified fidelity vs the ideal unitary offline -- it does not run on hardware, does not reproduce his physics results, and does not reproduce his exact encoding/decomposition (our naive ruler is 102 MS, not his reported direct 84)."
+  },
+  "dev_examples": "workspace/target.py (PUBLIC, protected) gives you: ideal_step(psi) (the target U_ideal), the native gate matrices + apply_circuit + is_native + ms_count, estimate_infidelity(circuit) to self-check on YOUR OWN random states (the scorer uses different, hidden states), the block unitaries HOP_UNITARY (3-qubit hopping) and INT_UNITARY (2-qubit on-site) with hop_qubits(b)/int_qubits(i) giving their qubit indices in FROZEN order, and fit_block(U, qubits, n_ms) -- an IPG-style tool that re-optimizes the continuous angles of an n_ms-MS ansatz to match U and returns a native sub-circuit. candidate.py MUST define build_circuit() -> list of native-gate tuples and be SELF-CONTAINED: it is scored as a COPY in experiments/, where workspace modules are NOT importable, so freeze your optimized gate list into build_circuit (numpy is allowed; importing target/baseline/incumbent is not). The immutable baseline is 102 MS at infidelity ~1e-13. Reference points (Dhruv, N=6): direct 14N=84 MS, hand-optimized 9N=54 MS; the 12 hopping blocks are identical up to qubit relabelling, and the exact per-block minimum is 4 MS (=> 54 MS exact for the whole step).",
+  "min_improvement": 1.0,
+  "confirm_stochastic": false,
+  "audit_promotions": false,
+  "promotion_authority": "auto",
+  "anomaly_audit_pct": 90.0,
+  "eval_timeout_s": 600,
+  "stall_window": 0,
+  "min_macro": 0.25
+}
